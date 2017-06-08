@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wjg.base.shiro.mapper.SysRolePermissionMapper">
+    <resultMap id="sysRolePermission" type="com.wjg.base.shiro.pojo.SysRolePermission">
+        <id property="sid" column="sid"/>
+        <result property="roleSid" column="role_sid"/>
+        <result property="permissionSid" column="permission_sid"/>
+    </resultMap>
+
+
+    <insert id="insertSysRolePermission" parameterType="SysRolePermission">
+        INSERT INTO sys_role_permission (role_sid, permission_sid) VALUES (#{roleSid},#{permissionSid})
+    </insert>
+
+    <delete id="deleteSysRolePermission" parameterType="long">
+        DELETE  FROM  sys_role_permission WHERE sid=#{sid}
+    </delete>
+
+    <select id="selectSysPermissionsBySysUserSid" resultType="String" parameterType="long">
+        SELECT DISTINCT sp.permission_key
+        FROM sys_role_user sru
+            JOIN sys_role r
+                ON sru.role_sid = r.sid
+            JOIN sys_role_permission srp
+                ON r.sid = srp.role_sid
+            JOIN sys_permission sp
+                ON srp.permission_sid = sp.sid
+        WHERE sru.user_sid = #{sysUserSid}
+    </select>
+
+    <delete id="deleteBySysPermissionSid" parameterType="long">
+        DELETE FROM sys_role_permission WHERE permission_sid=#{sysPermissionSid}
+    </delete>
+
+    <delete id="deleteBySysRoleSid" parameterType="long">
+        DELETE FROM sys_role_permission WHERE role_sid=#{sysRoleSid}
+    </delete>
+
+    <select id="selectSysPermissionsBySysRoleSid" resultType="String" parameterType="long">
+        SELECT srp.permission_sid FROM sys_role_permission srp WHERE srp.role_sid = #{sysRoleSid}
+    </select>
+</mapper>

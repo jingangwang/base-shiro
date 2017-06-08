@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <!--  配置SecurityManager -->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <!--<property name="cacheManager" ref="cacheManager"/>-->
+        <!-- Single realm app.  If you have multiple realms, use the 'realms' property instead. -->
+        <property name="realm" ref="jdbcRealm"/>
+    </bean>
+    <!-- 设置缓存 -->
+    <bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+        <property name="cacheManagerConfigFile" value="classpath:ehcache.xml"/>
+    </bean>
+    <!-- 自定义realm -->
+    <bean id="jdbcRealm" class="com.wjg.base.shiro.permission.realm.ShiroRealm">
+        <!-- 指定匹配器的加密方式 -->
+        <property name="credentialsMatcher">
+            <bean class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+                <!-- 指定加密方式 -->
+                <property name="hashAlgorithmName" value="MD5" />
+                <!-- 指定加密次数，防止常见的MD5破译，比如123456 -->
+                <property name="hashIterations" value="2" />
+            </bean>
+        </property>
+    </bean>
+    <!-- shiro 生命周期自动执行配置 -->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+    <!-- shiro开启注解，前提是配置了 lifecycleBeanPostProcessor-->
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+          depends-on="lifecycleBeanPostProcessor"/>
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+
+
+    <!-- 实现动态加载xml的url过滤定义和数据库中的url过滤定义 -->
+    <bean id="chainDefinitionSectionMetaSource" class="com.wjg.base.shiro.permission.ChainDefinitionSectionMetaSource">
+        <!-- 配置访问策略
+            1、anon   表示可以匿名访问
+            2、authc  表示需要认证后访问
+            3、logout 表示登出拦截器
+            4、roles  表示角色过滤器 用法 roles[admin]
+         -->
+        <property name="filterChainDefinitions">
+            <value>
+                /favicon.ico = anon
+                /assets/** = anon
+                /acount/** = anon
+                /login.html = anon
+                /index.html = anon
+                /loginCheck.html = anon
+                /logout.html = logout
+            </value>
+        </property>
+    </bean>
+    <!-- 配置shiro filter
+        1、id必须和web.xml的DelegatingFilterProxy的filter-name一致
+     -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager"/>
+        <property name="loginUrl" value="/login.html"/>
+        <property name="successUrl" value="/index.html"/>
+        <property name="unauthorizedUrl" value="/unauthorized.jsp"/>
+        <!-- 自定义权限配置 -->
+        <property name="filterChainDefinitionMap" ref="chainDefinitionSectionMetaSource"/>
+    </bean>
+</beans>
