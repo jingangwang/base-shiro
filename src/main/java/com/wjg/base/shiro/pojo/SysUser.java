@@ -1,11 +1,13 @@
 package com.wjg.base.shiro.pojo;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 
 /**
  * Created by wjg on 2017/5/22.
  */
-public class SysUser {
+public class SysUser implements Serializable{
+
     private Long sid;
     private String username;
     private String password;

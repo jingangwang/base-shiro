@@ -12,7 +12,7 @@
                            http://www.springframework.org/schema/aop/spring-aop.xsd">
 
     <import resource="spring-jdbc.xml"/>
-    <!--<import resource="spring-redis.xml"/>-->
+    <import resource="spring-redis.xml"/>
     <import resource="spring-shiro.xml"/>
 
     <aop:aspectj-autoproxy proxy-target-class="true"/>

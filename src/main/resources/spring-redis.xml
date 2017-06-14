@@ -33,26 +33,9 @@
           c:clusterConfig-ref="clusterConfig"
           p:password="${spring.redis.cluster.password}"/>
 
-    <bean id="redisTemplate" class="org.springframework.data.redis.core.StringRedisTemplate">
-        <constructor-arg name="connectionFactory" ref="lettuceConnectionFactory"/>
-        <property name="valueSerializer">
-            <bean class="org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer"/>
-        </property>
-    </bean>
 
-    <bean id="cacheManager" class="org.springframework.data.redis.cache.RedisCacheManager"
-          c:redisOperations-ref="redisTemplate"
-          p:loadRemoteCachesOnStartup="true"
-          p:usePrefix="true"
-          p:defaultExpiration="180">
-        <property name="expires">
-            <map key-type="java.lang.String" value-type="java.lang.Long">
-                <entry key="monitor-data-expire-days" value="3600"/>
-                <entry key="thread-num-weight" value="3600"/>
-                <entry key="es-window-size" value="3600"/>
-                <entry key="delete-monitor-data-page-size" value="3600"/>
-            </map>
-        </property>
-    </bean>
+
+    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate"
+          p:connectionFactory-ref="lettuceConnectionFactory" />
     <!-- redis缓存配置结束 -->
 </beans>

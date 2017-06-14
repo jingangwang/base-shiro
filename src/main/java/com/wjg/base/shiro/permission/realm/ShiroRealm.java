@@ -7,12 +7,14 @@ import com.wjg.base.shiro.service.ISysUserService;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
-import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
+import org.apache.shiro.cache.Cache;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Set;
@@ -21,6 +23,8 @@ import java.util.Set;
  * Created by wjg on 2017/5/18.
  */
 public class ShiroRealm extends AuthorizingRealm {
+
+    private static Logger logger = LoggerFactory.getLogger(ShiroRealm.class);
     @Autowired
     private ISysUserService sysUserService;
     @Autowired
@@ -49,15 +53,15 @@ public class ShiroRealm extends AuthorizingRealm {
 
         //5、验证通过之后，将用户信息放入session中
         Session session = SecurityUtils.getSubject().getSession();
-        session.setAttribute("user",sysUser);
-        session.setAttribute("userId",sysUser.getSid());
+        session.setAttribute("user", sysUser);
+        session.setAttribute("userId", sysUser.getSid());
         return info;
     }
 
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         //1、获取登录用户信息
-        String  username = principals.getPrimaryPrincipal().toString();
+        String username = principals.getPrimaryPrincipal().toString();
         SysUser sysUser = sysUserService.findSysUserByUserName(username);
         //2、查询当前用户的角色和权限
         Set<String> roleKeys = sysRoleUserService.findRoleKeysBySysUserSid(sysUser.getSid());

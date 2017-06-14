@@ -1,38 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:c="http://www.springframework.org/schema/c"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
     <!--  配置SecurityManager -->
-    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
-        <!--<property name="cacheManager" ref="cacheManager"/>-->
-        <!-- Single realm app.  If you have multiple realms, use the 'realms' property instead. -->
-        <property name="realm" ref="jdbcRealm"/>
-    </bean>
-    <!-- 设置缓存 -->
-    <bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
-        <property name="cacheManagerConfigFile" value="classpath:ehcache.xml"/>
-    </bean>
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager"
+          p:realm-ref="jdbcRealm"
+          p:sessionManager-ref="sessionManager"/>
+
+    <!-- 自定义的cacheManager -->
+    <bean id="redisCacheManager" class="com.wjg.base.shiro.permission.cache.RedisCacheManager"
+          c:redisTemplate-ref="redisTemplate"/>
+
     <!-- 自定义realm -->
     <bean id="jdbcRealm" class="com.wjg.base.shiro.permission.realm.ShiroRealm">
         <!-- 指定匹配器的加密方式 -->
         <property name="credentialsMatcher">
             <bean class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
                 <!-- 指定加密方式 -->
-                <property name="hashAlgorithmName" value="MD5" />
+                <property name="hashAlgorithmName" value="MD5"/>
                 <!-- 指定加密次数，防止常见的MD5破译，比如123456 -->
-                <property name="hashIterations" value="2" />
+                <property name="hashIterations" value="2"/>
             </bean>
         </property>
     </bean>
+
     <!-- shiro 生命周期自动执行配置 -->
     <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
     <!-- shiro开启注解，前提是配置了 lifecycleBeanPostProcessor-->
     <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
           depends-on="lifecycleBeanPostProcessor"/>
-    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
-        <property name="securityManager" ref="securityManager"/>
-    </bean>
-
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor"
+          p:securityManager-ref="securityManager"/>
 
     <!-- 实现动态加载xml的url过滤定义和数据库中的url过滤定义 -->
     <bean id="chainDefinitionSectionMetaSource" class="com.wjg.base.shiro.permission.ChainDefinitionSectionMetaSource">
@@ -48,7 +49,7 @@
                 /assets/** = anon
                 /acount/** = anon
                 /login.html = anon
-                /index.html = anon
+                /index.html = authc
                 /loginCheck.html = anon
                 /logout.html = logout
             </value>
@@ -57,12 +58,39 @@
     <!-- 配置shiro filter
         1、id必须和web.xml的DelegatingFilterProxy的filter-name一致
      -->
-    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
-        <property name="securityManager" ref="securityManager"/>
-        <property name="loginUrl" value="/login.html"/>
-        <property name="successUrl" value="/index.html"/>
-        <property name="unauthorizedUrl" value="/unauthorized.jsp"/>
-        <!-- 自定义权限配置 -->
-        <property name="filterChainDefinitionMap" ref="chainDefinitionSectionMetaSource"/>
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean"
+          p:securityManager-ref="securityManager"
+          p:loginUrl="/login.html"
+          p:successUrl="/index.html"
+          p:unauthorizedUrl="/unauthorized.jsp"
+          p:filterChainDefinitionMap-ref="chainDefinitionSectionMetaSource"/>
+
+    <!-- session  管理器
+        1、globalSessionTimeout 设置全局会话超时时间，默认30分钟
+        2、deleteInvalidSessions 是否在会话过期后会调用SessionDAO的delete方法删除会话 默认true
+        3、sessionValidationInterval 会话验证器调度时间
+        4、sessionDAO   自定义sessionDAO的实现
+        5、sessionIdCookie sessionIdCookie的实现,用于重写覆盖容器默认的JSESSIONID
+        6、sessionValidationSchedulerEnabled 定时检查失效的session开关
+    -->
+    <bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager"
+          p:globalSessionTimeout="1800000"
+          p:deleteInvalidSessions="true"
+          p:sessionValidationInterval="1800000"
+          p:sessionDAO-ref="redisSessionDAO"
+          p:sessionIdCookie-ref="shareSession"
+          p:sessionValidationSchedulerEnabled="true">
     </bean>
+    <!-- 自定义sessionDAO -->
+    <bean id="redisSessionDAO" class="com.wjg.base.shiro.permission.session.RedisSessionDAO"
+          c:redisTemplate-ref="redisTemplate"/>
+    <!--
+        sessionIdCookie的实现,用于重写覆盖容器默认的JSESSIONID
+        1、指定共享session的名字为SHAREJESSIONID，可自定义
+        2、指定cookie的目录
+     -->
+    <bean id="shareSession" class="org.apache.shiro.web.servlet.SimpleCookie"
+          c:name="SHAREJESSIONID"
+          p:path="/"
+          p:httpOnly="true"/>
 </beans>

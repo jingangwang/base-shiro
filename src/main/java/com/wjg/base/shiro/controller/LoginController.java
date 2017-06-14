@@ -37,6 +37,10 @@ public class LoginController {
 
     @RequestMapping("login")
     public String toLogin(){
+        Subject currentUser = SecurityUtils.getSubject();
+        if(currentUser.isAuthenticated()){
+            return "redirect:/index.html";
+        }
         return "/login";
     }
 }
