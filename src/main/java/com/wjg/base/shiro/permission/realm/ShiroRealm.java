@@ -25,12 +25,10 @@ import java.util.Set;
 public class ShiroRealm extends AuthorizingRealm {
 
     private static Logger logger = LoggerFactory.getLogger(ShiroRealm.class);
+
+    public static final String SHIRO_AUTH_INFO_CACHE_NAME="shiro_auth_info:";
     @Autowired
     private ISysUserService sysUserService;
-    @Autowired
-    private ISysRoleService sysRoleUserService;
-    @Autowired
-    private ISysPermissionService sysPermissionService;
 
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
@@ -63,13 +61,11 @@ public class ShiroRealm extends AuthorizingRealm {
         //1、获取登录用户信息
         String username = principals.getPrimaryPrincipal().toString();
         SysUser sysUser = sysUserService.findSysUserByUserName(username);
-        //2、查询当前用户的角色和权限
-        Set<String> roleKeys = sysRoleUserService.findRoleKeysBySysUserSid(sysUser.getSid());
-        Set<String> permissionKeys = sysPermissionService.findUserPermissions(sysUser.getSid());
-        //3、创建SimpleAuthorizationInfo,设置roles 和 permission
-        SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
-        info.addRoles(roleKeys);
-        info.addStringPermissions(permissionKeys);
-        return info;
+        return sysUserService.findAuthInfoByUserSid(sysUser.getSid());
+    }
+
+    @Override
+    protected Object getAuthorizationCacheKey(PrincipalCollection principals) {
+        return SHIRO_AUTH_INFO_CACHE_NAME+principals.getPrimaryPrincipal().toString();
     }
 }

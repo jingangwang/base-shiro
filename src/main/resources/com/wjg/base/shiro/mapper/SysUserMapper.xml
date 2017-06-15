@@ -68,4 +68,8 @@
     <select id="selectAllUser" resultMap="sysUser">
         SELECT * FROM  sys_user ORDER BY sid ASC
     </select>
+
+    <select id="selectUserByRoleSid" parameterType="long" resultMap="sysUser">
+        SELECT su.* FROM sys_user su,sys_role_user sru WHERE su.sid = sru.user_sid AND sru.role_sid = #{sysRoleSid}
+    </select>
 </mapper>

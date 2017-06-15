@@ -4,20 +4,21 @@ import com.wjg.base.shiro.util.PropertiesUtil;
 import com.wjg.base.shiro.util.ServletUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.session.Session;
-import org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO;
+import org.apache.shiro.session.UnknownSessionException;
+import org.apache.shiro.session.mgt.SimpleSession;
+import org.apache.shiro.session.mgt.eis.AbstractSessionDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
+import java.util.Collection;
 
 /**
- * Created by wjg on 2017/6/9.
+ * Created by wjg on 2017/6/14.
  */
-public class RedisSessionDAO extends EnterpriseCacheSessionDAO {
+public class RedisSessionDAO extends AbstractSessionDAO {
     private static Logger logger = LoggerFactory.getLogger(RedisSessionDAO.class);
     private RedisTemplate<String, Session> redisTemplate;
 
@@ -27,26 +28,44 @@ public class RedisSessionDAO extends EnterpriseCacheSessionDAO {
 
     @Override
     protected Serializable doCreate(Session session) {
-        logger.info("创建session。。。");
-        Serializable sessionId = super.doCreate(session);
+        HttpServletRequest request = ServletUtil.getReqeust();
+        if (request != null) {
+            String uri = request.getServletPath();
+            logger.info("requestURI:" + uri);
+            ////如果是静态资源，不生成session
+            if(ServletUtil.isStaticURI(uri)){
+                return null;
+            }
+        }
+        Serializable sessionId = this.generateSessionId(session);
+        this.assignSessionId(session,sessionId);
+        logger.info("创建session,sessionId:[{}]",sessionId);
         redisTemplate.opsForValue().set(sessionId.toString(), session);
         return sessionId;
     }
 
     @Override
     protected Session doReadSession(Serializable sessionId) {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        Session session = null;
+        HttpServletRequest request = ServletUtil.getReqeust();
         if (request != null) {
             String uri = request.getServletPath();
             logger.info("requestURI:" + uri);
-            //如果是静态文件，不读取session
+            session= (Session)request.getAttribute("session_"+sessionId);
         }
-        logger.info("读取session。。。");
-        return redisTemplate.opsForValue().get(sessionId);
+        if(session!=null){
+            return session;
+        }
+        logger.info("读取session,sessionId:[{}]",sessionId);
+        session =  redisTemplate.opsForValue().get(sessionId);
+        if(request!= null && session!=null){
+            request.setAttribute("session_"+sessionId,session);
+        }
+        return session;
     }
 
     @Override
-    protected void doUpdate(Session session) {
+    public void update(Session session) throws UnknownSessionException {
         HttpServletRequest request = ServletUtil.getReqeust();
         if (request != null) {
             String uri = request.getServletPath();
@@ -61,13 +80,18 @@ public class RedisSessionDAO extends EnterpriseCacheSessionDAO {
                 return;
             }
         }
-        logger.info("更新session。。。");
+        logger.info("更新session,sessionId:[{}]",session.getId());
         redisTemplate.opsForValue().set(session.getId().toString(), session);
     }
 
     @Override
-    protected void doDelete(Session session) {
-        logger.info("删除session。。。");
+    public void delete(Session session) {
+        logger.info("删除session,sessionId:[{}]",session.getId());
         redisTemplate.delete(session.getId().toString());
+    }
+
+    @Override
+    public Collection<Session> getActiveSessions() {
+        return null;
     }
 }

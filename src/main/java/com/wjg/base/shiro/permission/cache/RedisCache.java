@@ -20,7 +20,7 @@ public class RedisCache<K,V> implements Cache<K,V> {
 
     private RedisTemplate<K,V> redisTemplate;
 
-    private final static  String KEY_PREFIX = "shiro_redis_session:";
+    private final static  String KEY_PREFIX = "shiro_redis_cache:";
 
     public RedisCache(RedisTemplate<K, V> redisTemplate) {
         this.redisTemplate = redisTemplate;

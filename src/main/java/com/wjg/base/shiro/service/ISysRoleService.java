@@ -2,6 +2,7 @@ package com.wjg.base.shiro.service;
 
 import com.github.pagehelper.PageInfo;
 import com.wjg.base.shiro.pojo.SysRole;
+import com.wjg.base.shiro.pojo.SysUser;
 import com.wjg.base.shiro.vo.ResultVO;
 import com.wjg.base.shiro.vo.SysRoleVO;
 
@@ -32,4 +33,6 @@ public interface ISysRoleService {
     Set<String> findRolePersByRoleSid(Long roleSid);
 
     ResultVO updateRolePermissions(Long roleSid, String perSids);
+
+    void updateCacheAuthInfo(SysUser user);
 }

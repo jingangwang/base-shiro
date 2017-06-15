@@ -4,6 +4,7 @@ import com.github.pagehelper.PageInfo;
 import com.wjg.base.shiro.pojo.SysUser;
 import com.wjg.base.shiro.vo.ResultVO;
 import com.wjg.base.shiro.vo.SysUserVO;
+import org.apache.shiro.authz.AuthorizationInfo;
 
 import java.util.List;
 
@@ -25,4 +26,8 @@ public interface ISysUserService {
     ResultVO updateUser(SysUserVO userVO);
 
     SysUserVO findSysUserBySid(Long sysUserSid);
+
+    SysUser findSysUserPOBySid(Long sysUserSid);
+
+    AuthorizationInfo findAuthInfoByUserSid(Long sysUserSid);
 }

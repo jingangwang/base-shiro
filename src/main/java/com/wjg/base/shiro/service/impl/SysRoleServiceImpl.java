@@ -5,11 +5,19 @@ import com.github.pagehelper.PageInfo;
 import com.wjg.base.shiro.mapper.SysRoleMapper;
 import com.wjg.base.shiro.mapper.SysRolePermissionMapper;
 import com.wjg.base.shiro.mapper.SysRoleUserMapper;
+import com.wjg.base.shiro.mapper.SysUserMapper;
+import com.wjg.base.shiro.permission.cache.RedisCache;
+import com.wjg.base.shiro.permission.realm.ShiroRealm;
 import com.wjg.base.shiro.pojo.SysRole;
 import com.wjg.base.shiro.pojo.SysRolePermission;
+import com.wjg.base.shiro.pojo.SysUser;
 import com.wjg.base.shiro.service.ISysRoleService;
+import com.wjg.base.shiro.service.ISysUserService;
 import com.wjg.base.shiro.vo.ResultVO;
 import com.wjg.base.shiro.vo.SysRoleVO;
+import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.cache.Cache;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +40,12 @@ public class SysRoleServiceImpl implements ISysRoleService {
     private SysRoleMapper sysRoleMapper;
     @Autowired
     private SysRolePermissionMapper sysRolePermissionMapper;
+    @Autowired
+    private SysUserMapper sysUserMapper;
+    @Autowired
+    private RedisCache<Object,AuthorizationInfo> redisCache;
+    @Autowired
+    private ISysUserService sysUserService;
 
     @Override
     public List<SysRole> findRolesBySysUserSid(long sysUserSid) {
@@ -130,6 +144,8 @@ public class SysRoleServiceImpl implements ISysRoleService {
                     sysRolePermissionMapper.insertSysRolePermission(new SysRolePermission(roleSid, sid));
                 });
             }
+            List<SysUser> sysUsers = sysUserMapper.selectUserByRoleSid(roleSid);
+            sysUsers.stream().forEach(user-> updateCacheAuthInfo(user));
             result.setCode("success");
             result.setMsg("OK");
         } else {
@@ -137,5 +153,16 @@ public class SysRoleServiceImpl implements ISysRoleService {
             result.setMsg("保存权限失败");
         }
         return result;
+    }
+
+    /**
+     * //更新该角色下的所有用户的权限
+     *
+     * @param user
+     */
+    @Override
+    public void updateCacheAuthInfo(SysUser user) {
+        String cacheKey = ShiroRealm.SHIRO_AUTH_INFO_CACHE_NAME+user.getUsername();
+        redisCache.put(cacheKey,sysUserService.findAuthInfoByUserSid(user.getSid()));
     }
 }

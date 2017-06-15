@@ -7,7 +7,8 @@
     <!--  配置SecurityManager -->
     <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager"
           p:realm-ref="jdbcRealm"
-          p:sessionManager-ref="sessionManager"/>
+          p:sessionManager-ref="sessionManager"
+          p:cacheManager-ref="redisCacheManager"/>
 
     <!-- 自定义的cacheManager -->
     <bean id="redisCacheManager" class="com.wjg.base.shiro.permission.cache.RedisCacheManager"
@@ -47,6 +48,7 @@
             <value>
                 /favicon.ico = anon
                 /assets/** = anon
+                /js/** = anon
                 /acount/** = anon
                 /login.html = anon
                 /index.html = authc
@@ -81,6 +83,7 @@
           p:sessionIdCookie-ref="shareSession"
           p:sessionValidationSchedulerEnabled="true">
     </bean>
+
     <!-- 自定义sessionDAO -->
     <bean id="redisSessionDAO" class="com.wjg.base.shiro.permission.session.RedisSessionDAO"
           c:redisTemplate-ref="redisTemplate"/>
@@ -91,6 +94,7 @@
      -->
     <bean id="shareSession" class="org.apache.shiro.web.servlet.SimpleCookie"
           c:name="SHAREJESSIONID"
-          p:path="/"
           p:httpOnly="true"/>
+
+    <bean id="redisCache" class="com.wjg.base.shiro.permission.cache.RedisCache" c:redisTemplate-ref="redisTemplate"/>
 </beans>

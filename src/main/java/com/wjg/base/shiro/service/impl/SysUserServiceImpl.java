@@ -10,9 +10,13 @@ import com.wjg.base.shiro.mapper.SysUserMapper;
 import com.wjg.base.shiro.pojo.SysRole;
 import com.wjg.base.shiro.pojo.SysRoleUser;
 import com.wjg.base.shiro.pojo.SysUser;
+import com.wjg.base.shiro.service.ISysPermissionService;
+import com.wjg.base.shiro.service.ISysRoleService;
 import com.wjg.base.shiro.service.ISysUserService;
 import com.wjg.base.shiro.vo.ResultVO;
 import com.wjg.base.shiro.vo.SysUserVO;
+import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.crypto.hash.SimpleHash;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -37,6 +42,10 @@ public class SysUserServiceImpl implements ISysUserService {
     private SysRoleUserMapper sysRoleUserMapper;
     @Autowired
     private SysRoleMapper sysRoleMapper;
+    @Autowired
+    private  ISysRoleService sysRoleService;
+    @Autowired
+    private ISysPermissionService sysPermissionService;
 
     @Override
     public SysUser findSysUserByUserName(String username) {
@@ -106,6 +115,9 @@ public class SysUserServiceImpl implements ISysUserService {
             sysRoleUserMapper.deleteSysRoleUSerByUserSid(userVO.getSid());
 
             userVO.getRoles().forEach(sid -> sysRoleUserMapper.insertSysRoleUser(new SysRoleUser(user.getSid(), sid)));
+
+            //更新缓存中的权限信息
+            sysRoleService.updateCacheAuthInfo(this.findSysUserPOBySid(user.getSid()));
         }
         resultVO.setCode("success");
         resultVO.setMsg("OK");
@@ -115,9 +127,29 @@ public class SysUserServiceImpl implements ISysUserService {
     @Override
     public SysUserVO findSysUserBySid(Long sysUserSid) {
         SysUserVO sysUserVO = new SysUserVO();
-        SysUser sysUser = sysUserMapper.selectBySid(sysUserSid);
+        SysUser sysUser = findSysUserPOBySid(sysUserSid);
         BeanUtils.copyProperties(sysUser,sysUserVO);
         sysUserVO.setRoles(sysRoleMapper.selectRoleByUserSid(sysUserSid).stream().map(SysRole::getSid).collect(Collectors.toSet()));
         return sysUserVO;
     }
+
+    @Override
+    public SysUser findSysUserPOBySid(Long sysUserSid) {
+        return  sysUserMapper.selectBySid(sysUserSid);
+    }
+
+    @Override
+    public AuthorizationInfo findAuthInfoByUserSid(Long sysUserSid) {
+        //1、查询当前用户的角色和权限
+        Set<String> roleKeys = sysRoleService.findRoleKeysBySysUserSid(sysUserSid);
+        Set<String> permissionKeys = sysPermissionService.findUserPermissions(sysUserSid);
+        //2、创建SimpleAuthorizationInfo,设置roles 和 permission
+        SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
+        info.addRoles(roleKeys);
+        info.addStringPermissions(permissionKeys);
+        return info;
+    }
+
+
+
 }
