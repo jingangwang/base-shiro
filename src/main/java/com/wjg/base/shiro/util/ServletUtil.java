@@ -1,6 +1,7 @@
 package com.wjg.base.shiro.util;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.codec.Base64;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 

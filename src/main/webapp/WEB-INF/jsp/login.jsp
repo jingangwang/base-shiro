@@ -87,7 +87,7 @@ License: You must have a valid license purchased only from themeforest(the above
         <div class="form-actions">
             <button type="submit" class="btn btn-success uppercase">Login</button>
             <label class="rememberme check">
-                <input type="checkbox" name="remember" value="1"/>记住我 </label>
+                <input type="checkbox" name="remember" value="1"/>记住我7天 </label>
         </div>
     </form>
     <!-- END LOGIN FORM -->

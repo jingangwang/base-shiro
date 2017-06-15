@@ -8,7 +8,8 @@
     <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager"
           p:realm-ref="jdbcRealm"
           p:sessionManager-ref="sessionManager"
-          p:cacheManager-ref="redisCacheManager"/>
+          p:cacheManager-ref="redisCacheManager"
+          p:rememberMeManager-ref="rememberMeManager"/>
 
     <!-- 自定义的cacheManager -->
     <bean id="redisCacheManager" class="com.wjg.base.shiro.permission.cache.RedisCacheManager"
@@ -40,9 +41,10 @@
     <bean id="chainDefinitionSectionMetaSource" class="com.wjg.base.shiro.permission.ChainDefinitionSectionMetaSource">
         <!-- 配置访问策略
             1、anon   表示可以匿名访问
-            2、authc  表示需要认证后访问
+            2、authc  表示需要认证后访问，不包括rememberMe
             3、logout 表示登出拦截器
             4、roles  表示角色过滤器 用法 roles[admin]
+            5、user   表示通过认证或者rememberMe都可以
          -->
         <property name="filterChainDefinitions">
             <value>
@@ -51,7 +53,7 @@
                 /js/** = anon
                 /acount/** = anon
                 /login.html = anon
-                /index.html = authc
+                /index.html = user
                 /loginCheck.html = anon
                 /logout.html = logout
             </value>
@@ -80,7 +82,7 @@
           p:deleteInvalidSessions="true"
           p:sessionValidationInterval="1800000"
           p:sessionDAO-ref="redisSessionDAO"
-          p:sessionIdCookie-ref="shareSession"
+          p:sessionIdCookie-ref="shareSessionCookie"
           p:sessionValidationSchedulerEnabled="true">
     </bean>
 
@@ -91,10 +93,20 @@
         sessionIdCookie的实现,用于重写覆盖容器默认的JSESSIONID
         1、指定共享session的名字为SHAREJESSIONID，可自定义
         2、指定cookie的目录
+        3、maxAge -1 代表浏览器关闭失效此COOKIE
      -->
-    <bean id="shareSession" class="org.apache.shiro.web.servlet.SimpleCookie"
+    <bean id="shareSessionCookie" class="org.apache.shiro.web.servlet.SimpleCookie"
           c:name="SHAREJESSIONID"
-          p:httpOnly="true"/>
-
+          p:httpOnly="true"
+          p:maxAge="-1"/>
+    <!-- 记住我COOKIE配置 -->
+    <bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie"
+          c:name="rememberMe"
+          p:httpOnly="true"
+          p:maxAge="604800"/>
+    <!-- rememberMe管理器 -->
+    <bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager"
+          p:cipherKey="#{T(org.apache.shiro.codec.Base64).decode('4AvVhmFLUs0KTA3Kprsdag==')}"
+          p:cookie-ref="rememberMeCookie"/>
     <bean id="redisCache" class="com.wjg.base.shiro.permission.cache.RedisCache" c:redisTemplate-ref="redisTemplate"/>
 </beans>

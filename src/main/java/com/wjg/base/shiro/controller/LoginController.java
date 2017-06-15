@@ -1,5 +1,6 @@
 package com.wjg.base.shiro.controller;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.UsernamePasswordToken;
@@ -20,11 +21,11 @@ public class LoginController {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @RequestMapping("loginCheck")
-    public String login(@RequestParam("username") String username, @RequestParam("password") String password){
+    public String login(@RequestParam("username") String username, @RequestParam("password") String password,@RequestParam(value = "remember",required = false) String remember){
         Subject currentUser = SecurityUtils.getSubject();
         if(!currentUser.isAuthenticated()){
-            UsernamePasswordToken token = new UsernamePasswordToken(username,password);
-            token.setRememberMe(true);
+            boolean rememberMe = StringUtils.isNotEmpty(remember) && "1".equals(remember);
+            UsernamePasswordToken token = new UsernamePasswordToken(username,password,rememberMe);
             try{
                 currentUser.login(token);
             }catch (AuthenticationException e){
@@ -38,7 +39,7 @@ public class LoginController {
     @RequestMapping("login")
     public String toLogin(){
         Subject currentUser = SecurityUtils.getSubject();
-        if(currentUser.isAuthenticated()){
+        if(currentUser.isAuthenticated() || currentUser.isRemembered()){
             return "redirect:/index.html";
         }
         return "/login";

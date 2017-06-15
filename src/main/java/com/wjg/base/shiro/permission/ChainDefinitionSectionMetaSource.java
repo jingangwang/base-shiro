@@ -41,7 +41,7 @@ public class ChainDefinitionSectionMetaSource implements FactoryBean<Ini.Section
                     section.put(per.getUrl(), MessageFormat.format(PERMISSION_STRING, per.getPermissionKey()));
                 });
         //所有资源的访问权限，必须放在最后
-        section.put("/**","authc");
+        section.put("/**","user");
         return section;
     }
 
