@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.xml.transform.Result;
 import java.util.List;
 
 /**
@@ -116,7 +117,7 @@ public class UserController {
     @ResponseBody
     @RequestMapping("addUser")
     public ResultVO addUser(SysUserVO sysUserVO){
-        logger.info("user-->"+sysUserVO.toString());
+        logger.info("接受到新增用户的报文-->"+sysUserVO.toString());
         ResultVO result = sysUserService.addUser(sysUserVO);
         return result;
     }
@@ -129,9 +130,22 @@ public class UserController {
     @ResponseBody
     @RequestMapping("updateUser")
     public ResultVO updateUser(SysUserVO sysUserVO){
-        logger.info("user-->"+sysUserVO.toString());
+        logger.info("接受到修改用户的报文-->"+sysUserVO.toString());
         ResultVO result = sysUserService.updateUser(sysUserVO);
         return result;
+    }
+
+    /**
+     * 修改
+     * @param sysUserVO
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("updatePassword")
+    public ResultVO updatePassword(SysUserVO sysUserVO){
+        logger.info("接受到修改密码的报文-->"+sysUserVO.toString());
+        ResultVO result = sysUserService.updatePassword(sysUserVO);
+        return  result;
     }
 
 }

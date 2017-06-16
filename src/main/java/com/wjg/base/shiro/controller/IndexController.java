@@ -37,6 +37,7 @@ public class IndexController {
         List<SysPermission> list = new PermissionTreeUtil().getTrees(menuPermissions, 0L);
         model.setViewName("index");
         model.addObject("list",list);
+        model.addObject("userSid",sysUser.getSid());
         return model;
     }
 

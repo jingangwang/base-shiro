@@ -13,8 +13,10 @@ import com.wjg.base.shiro.pojo.SysUser;
 import com.wjg.base.shiro.service.ISysPermissionService;
 import com.wjg.base.shiro.service.ISysRoleService;
 import com.wjg.base.shiro.service.ISysUserService;
+import com.wjg.base.shiro.util.CredentialsUtil;
 import com.wjg.base.shiro.vo.ResultVO;
 import com.wjg.base.shiro.vo.SysUserVO;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.crypto.hash.SimpleHash;
@@ -43,7 +45,7 @@ public class SysUserServiceImpl implements ISysUserService {
     @Autowired
     private SysRoleMapper sysRoleMapper;
     @Autowired
-    private  ISysRoleService sysRoleService;
+    private ISysRoleService sysRoleService;
     @Autowired
     private ISysPermissionService sysPermissionService;
 
@@ -81,10 +83,10 @@ public class SysUserServiceImpl implements ISysUserService {
     public ResultVO addUser(SysUserVO userVO) {
         ResultVO resultVO = new ResultVO();
         SysUser sysUser = sysUserMapper.selectByUserName(userVO.getUsername());
-        if(sysUser!=null){
+        if (sysUser != null) {
             resultVO.setCode("error");
             resultVO.setMsg("增加用户失败，用户名已存在");
-            return  resultVO;
+            return resultVO;
         }
         SysUser user = new SysUser();
         BeanUtils.copyProperties(userVO, user);
@@ -92,8 +94,7 @@ public class SysUserServiceImpl implements ISysUserService {
         user.setUpdateTime(new Timestamp(System.currentTimeMillis()));
         user.setStatus("1");
         //密码md5加密，盐值用username
-        user.setPassword(new SimpleHash("MD5", user.getPassword(),
-                user.getUsername(), 2).toString());
+        user.setPassword(CredentialsUtil.getPasswordCredentials(user.getPassword(), user.getUsername(), 2));
         sysUserMapper.insertSysUser(user);
 
         userVO.getRoles().forEach(sid -> sysRoleUserMapper.insertSysRoleUser(new SysRoleUser(user.getSid(), sid)));
@@ -106,9 +107,9 @@ public class SysUserServiceImpl implements ISysUserService {
     @Transactional
     public ResultVO updateUser(SysUserVO userVO) {
         ResultVO resultVO = new ResultVO();
-        if(userVO.getSid()!=null){
+        if (userVO.getSid() != null) {
             SysUser user = new SysUser();
-            BeanUtils.copyProperties(userVO,user);
+            BeanUtils.copyProperties(userVO, user);
             user.setUpdateTime(new Timestamp(System.currentTimeMillis()));
             sysUserMapper.updateSysUser(user);
 
@@ -128,14 +129,14 @@ public class SysUserServiceImpl implements ISysUserService {
     public SysUserVO findSysUserBySid(Long sysUserSid) {
         SysUserVO sysUserVO = new SysUserVO();
         SysUser sysUser = findSysUserPOBySid(sysUserSid);
-        BeanUtils.copyProperties(sysUser,sysUserVO);
+        BeanUtils.copyProperties(sysUser, sysUserVO);
         sysUserVO.setRoles(sysRoleMapper.selectRoleByUserSid(sysUserSid).stream().map(SysRole::getSid).collect(Collectors.toSet()));
         return sysUserVO;
     }
 
     @Override
     public SysUser findSysUserPOBySid(Long sysUserSid) {
-        return  sysUserMapper.selectBySid(sysUserSid);
+        return sysUserMapper.selectBySid(sysUserSid);
     }
 
     @Override
@@ -150,6 +151,24 @@ public class SysUserServiceImpl implements ISysUserService {
         return info;
     }
 
+    @Override
+    @Transactional
+    public ResultVO updatePassword(SysUserVO sysUserVO) {
+        ResultVO resultVO = new ResultVO();
+        if (sysUserVO.getSid() == null || StringUtils.isEmpty(sysUserVO.getPassword())) {
+            resultVO.setCode("error");
+            resultVO.setMsg("修改密码失败");
+            return  resultVO;
+        }
+        SysUser user = new SysUser();
+        BeanUtils.copyProperties(sysUserVO, user);
+        user.setUpdateTime(new Timestamp(System.currentTimeMillis()));
+        user.setPassword(CredentialsUtil.getPasswordCredentials(user.getPassword(), sysUserMapper.selectBySid(user.getSid()).getUsername(), 2));
+        sysUserMapper.updateSysUser(user);
+        resultVO.setCode("success");
+        resultVO.setMsg("OK");
+        return resultVO;
+    }
 
 
 }

@@ -2528,9 +2528,9 @@ License: You must have a valid license purchased only from themeforest(the above
 <!-- BEGIN FOOTER -->
 <div class="page-footer">
     <div class="page-footer-inner">
-        2014 &copy; Metronic by keenthemes. <a
+        2017 &copy; GHOSTMAN  <a
             href="http://themeforest.net/item/metronic-responsive-admin-dashboard-template/4021469?ref=keenthemes"
-            title="Purchase Metronic just for 27$ and get lifetime updates for free" target="_blank">Purchase
+            title="link me with the QQ 493263689" target="_blank">Purchase
         Metronic!</a>
     </div>
     <div class="scroll-to-top">
@@ -2618,6 +2618,8 @@ License: You must have a valid license purchased only from themeforest(the above
 <script type="text/javascript" src="${ctx}/js/layer-v1.9.2/layer/layer.js"></script>
 <script src="${ctx}/assets/global/plugins/bootbox/bootbox.min.js" type="text/javascript"></script>
 <script src="${ctx}/js/jquery/jquery.form.js" type="text/javascript"></script>
+<script src="${ctx}/js/system/index/password-form-validation.js" type="text/javascript"></script>
+<script src="${ctx}/js/system/index/index.js" type="text/javascript"></script>
 <!-- END PAGE LEVEL SCRIPTS -->
 <script>
     var rootPath = '${ctx}';
@@ -2628,6 +2630,7 @@ License: You must have a valid license purchased only from themeforest(the above
         QuickSidebar.init(); // init quick sidebar
         Index.init(); // init index page
         Tasks.initDashboardWidget(); // init tash dashboard widget
+        PasswordFormValidation.init();
 
         //点击左边菜单，load右边的对应菜单页面
         $("[nav-n]").each(function () {
@@ -2647,3 +2650,64 @@ License: You must have a valid license purchased only from themeforest(the above
 </body>
 <!-- END BODY -->
 </html>
+
+
+<!-- 修改密码模态框（Modal） begin  -->
+<div class="modal fade" id="updatePasswordModal" tabindex="-1" role="dialog" aria-labelledby="updatePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myUpdateModalLabel">修改密码</h4>
+            </div>
+            <div class="modal-body">
+                <!-- BEGIN VALIDATION STATES-->
+                <div class="portlet-body form">
+                    <!-- BEGIN FORM-->
+                    <form action="${ctx}/user/updatePassword.json" id="password-update-form" class="form-horizontal" novalidate="novalidate">
+                        <div class="form-body">
+                            <input name="sid" type="hidden" value="${userSid}"/>
+                            <div class="alert alert-danger display-hide">
+                                <button class="close" data-close="alert"></button>
+                                You have some form errors. Please check below.
+                            </div>
+                            <div class="alert alert-success display-hide">
+                                <button class="close" data-close="alert"></button>
+                                Your form validation is successful!
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-md-3">新密码 <span class="required" >
+										* </span>
+                                </label>
+                                <div class="col-md-6">
+                                    <div class="input-icon right">
+                                        <i class="fa"></i>
+                                        <input  class="form-control" name="password" type="password">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-md-3">重复新密码 <span class="required">
+										* </span>
+                                </label>
+                                <div class="col-md-6">
+                                    <div class="input-icon right">
+                                        <i class="fa"></i>
+                                        <input class="form-control" id="newPassword" name="newPassword" type="password">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <!-- END FORM-->
+                </div>
+                <!-- END VALIDATION STATES-->
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="updateBtn" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 修改密码模态框（Modal） end  -->

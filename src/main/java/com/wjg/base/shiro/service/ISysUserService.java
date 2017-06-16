@@ -30,4 +30,6 @@ public interface ISysUserService {
     SysUser findSysUserPOBySid(Long sysUserSid);
 
     AuthorizationInfo findAuthInfoByUserSid(Long sysUserSid);
+
+    ResultVO updatePassword(SysUserVO sysUserVO);
 }

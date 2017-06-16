@@ -21,7 +21,7 @@ var UserFormValidation = function () {
                 },
                 password: {
                     required: true,
-                    minlength:8
+                    minlength:6
                 },
                 password2: {
                     required: true,
